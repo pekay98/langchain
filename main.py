@@ -1,3 +1,5 @@
+from typing import List
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -9,6 +11,16 @@ import os
 
 
 load_dotenv()
+
+class Source(BaseModel):
+    """Schema for a source by the agent"""
+    name: str = Field(description="Name of the source")
+    url: str = Field(description="URL of the source")
+
+class AgentResonse(BaseModel):
+    """Schema for the agent response and sources"""
+    answer: str = Field(description="Final answer to the user")
+    sources: List[Source] = Field(default_factory=list, description="Sources used to generate the answer")
 
 @tool
 def search(query: str) -> str:
@@ -22,7 +34,8 @@ tools = [search, TavilySearch()]
 llm = ChatOpenAI()
 agent = create_agent(
     model=llm,
-    tools=tools
+    tools=tools,
+    response_format=AgentResonse
 )
 
 
